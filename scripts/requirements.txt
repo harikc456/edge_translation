@@ -1,0 +1,8 @@
+torch
+tensorflow
+onnx
+onnx-tf
+transformers
+librosa
+tflite-support
+ai-edge-torch
