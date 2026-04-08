@@ -9,6 +9,7 @@ model_name = "openai/whisper-tiny"
 processor = WhisperProcessor.from_pretrained(model_name)
 model = WhisperForConditionalGeneration.from_pretrained(model_name)
 model.eval()
+print("model loaded")
 
 def convert_encoder():
     print("Converting Whisper Encoder...")

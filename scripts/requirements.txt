@@ -1,8 +1,6 @@
 torch
 tensorflow
-onnx
-onnx-tf
 transformers
-librosa
+ai-edge-torch-nightly
 tflite-support
-ai-edge-torch
+librosa

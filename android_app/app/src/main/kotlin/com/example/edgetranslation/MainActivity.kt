@@ -14,6 +14,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var pipeline: TranslationPipeline
     private lateinit var recorder: AudioRecorder
     private lateinit var statusText: TextView
+    private lateinit var translationText: TextView
     private val scope = CoroutineScope(Dispatchers.Main + Job())
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,6 +24,7 @@ class MainActivity : AppCompatActivity() {
         pipeline = TranslationPipeline(this)
         recorder = AudioRecorder()
         statusText = findViewById(R.id.statusText)
+        translationText = findViewById(R.id.translationText)
 
         findViewById<Button>(R.id.btnRecord).setOnClickListener {
             startTranslation()
@@ -33,16 +35,23 @@ class MainActivity : AppCompatActivity() {
         scope.launch {
             try {
                 statusText.text = "Listening..."
+                translationText.text = ""
                 val audio = recorder.record(5000)
 
                 statusText.text = "Processing..."
-                val resultAudio = withContext(Dispatchers.Default) {
-                    pipeline.translateAudio(audio, "English", "Spanish")
+                val result = withContext(Dispatchers.Default) {
+                    pipeline.translateAudio(audio)
                 }
 
-                if (resultAudio != null) {
-                    statusText.text = "Playing translation..."
-                    playAudio(resultAudio)
+                if (result != null) {
+                    translationText.text = result.translation
+                    
+                    if (result.audio != null) {
+                        statusText.text = "Playing translation..."
+                        playAudio(result.audio)
+                    } else {
+                        statusText.text = "Translation complete (no audio)."
+                    }
                 } else {
                     statusText.text = "Translation failed."
                 }

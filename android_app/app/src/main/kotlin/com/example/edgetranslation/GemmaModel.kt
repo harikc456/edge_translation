@@ -16,8 +16,15 @@ class GemmaModel(context: Context) {
         engine?.initialize()
     }
 
-    fun translate(text: String, from: String, to: String): String {
-        val prompt = "Translate the following from $from to $to: $text"
+    fun translate(text: String): String {
+        val prompt = """
+            You are a translation assistant. The user will give you a request like 'Translate to French: Hello' or 'How are you in Spanish?'.
+            1. Identify the target language. If not specified, default to Spanish.
+            2. Translate the message.
+            3. Respond ONLY in this format: 'Language: [Language] | Translation: [Translated Text]'
+            
+            User request: $text
+        """.trimIndent()
         val conversation = engine?.createConversation()
         val response = conversation?.sendMessage(prompt)
         return response?.text ?: ""

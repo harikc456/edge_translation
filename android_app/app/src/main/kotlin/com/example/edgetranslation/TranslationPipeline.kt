@@ -8,16 +8,40 @@ class TranslationPipeline(private val context: Context) {
     private val gemma = GemmaModel(context)
     private val mms = MMSModel(context)
 
-    suspend fun translateAudio(audioData: FloatArray, sourceLang: String, targetLang: String): FloatArray? {
+    data class TranslationResult(
+        val transcript: String,
+        val translation: String,
+        val audio: FloatArray?
+    )
+
+    suspend fun translateAudio(audioData: FloatArray): TranslationResult? {
         Log.d("Pipeline", "Starting STT (Whisper)...")
         val transcript = whisper.transcribe(audioData) ?: return null
         Log.d("Pipeline", "Transcribed: $transcript")
 
         Log.d("Pipeline", "Starting Translation (Gemma 4)...")
-        val translation = gemma.translate(transcript, sourceLang, targetLang)
-        Log.d("Pipeline", "Translated: $translation")
+        val llmResponse = gemma.translate(transcript)
+        Log.d("Pipeline", "LLM Response: $llmResponse")
+
+        // Parse structured response: "Language: Spanish | Translation: Hola"
+        var detectedLang = "Spanish" // Default
+        var translation = llmResponse
+        
+        try {
+            val parts = llmResponse.split("|")
+            if (parts.size == 2) {
+                detectedLang = parts[0].replace("Language:", "").trim()
+                translation = parts[1].replace("Translation:", "").trim()
+            }
+        } catch (e: Exception) {
+            Log.e("Pipeline", "Error parsing LLM response", e)
+        }
+
+        Log.d("Pipeline", "Detected Lang: $detectedLang, Translation: $translation")
 
         Log.d("Pipeline", "Starting TTS (MMS)...")
-        return mms.synthesize(translation, targetLang)
+        val audio = mms.synthesize(translation, detectedLang)
+        
+        return TranslationResult(transcript, translation, audio)
     }
 }
